@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const TOKEN_KEY = 'sams.token';
 
@@ -15,70 +17,61 @@ export class ApiError extends Error {
   }
 }
 
-function buildQuery(params = {}) {
-  const qs = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') return;
-    qs.append(key, value);
-  });
-  const str = qs.toString();
-  return str ? `?${str}` : '';
-}
+// Axios instance
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-/**
- * Single entry point for all API calls. Handles auth header, JSON parsing and
- * a global 401 handler so an expired session bounces to the login screen.
- */
-async function request(path, { method = 'GET', body, params, raw = false, signal } = {}) {
-  const headers = {};
-  const token = tokenStore.get();
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
-
-  const res = await fetch(`${BASE_URL}${path}${buildQuery(params)}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal,
-  });
-
-  if (res.status === 401) {
-    tokenStore.clear();
-    if (!window.location.pathname.startsWith('/login')) {
-      window.location.assign('/login');
+// Request interceptor: attach token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = tokenStore.get();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    throw new ApiError('Your session expired. Please sign in again.', 401);
-  }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
-  if (raw) {
-    if (!res.ok) throw new ApiError('Request failed', res.status);
-    return res.blob();
-  }
+// Response interceptor: handle 401 & format response
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // If request was for raw blob download
+    if (response.config.responseType === 'blob') {
+      return response.data;
+    }
+    // Return inner data field if formatted as { success, data }
+    return response.data?.data !== undefined ? response.data.data : response.data;
+  },
+  (error) => {
+    const status = error.response?.status;
+    const errorData = error.response?.data?.error;
 
-  let payload = null;
-  try {
-    payload = await res.json();
-  } catch {
-    payload = null;
-  }
+    if (status === 401) {
+      tokenStore.clear();
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login');
+      }
+      return Promise.reject(new ApiError('Your session expired. Please sign in again.', 401));
+    }
 
-  if (!res.ok) {
-    throw new ApiError(
-      payload?.error?.message || `Request failed (${res.status})`,
-      res.status,
-      payload?.error?.details,
-    );
-  }
-  return payload?.data;
-}
+    const message = errorData?.message || error.message || `Request failed (${status || 'Network Error'})`;
+    return Promise.reject(new ApiError(message, status, errorData?.details));
+  },
+);
 
 export const api = {
-  get: (path, params, opts) => request(path, { ...opts, params }),
-  post: (path, body, opts) => request(path, { ...opts, method: 'POST', body }),
-  put: (path, body, opts) => request(path, { ...opts, method: 'PUT', body }),
-  patch: (path, body, opts) => request(path, { ...opts, method: 'PATCH', body }),
-  delete: (path, opts) => request(path, { ...opts, method: 'DELETE' }),
-  download: (path, params) => request(path, { params, raw: true }),
+  get: (path, params, opts = {}) => axiosInstance.get(path, { params, ...opts }),
+  post: (path, body, opts = {}) => axiosInstance.post(path, body, opts),
+  put: (path, body, opts = {}) => axiosInstance.put(path, body, opts),
+  patch: (path, body, opts = {}) => axiosInstance.patch(path, body, opts),
+  delete: (path, opts = {}) => axiosInstance.delete(path, opts),
+  download: (path, params, opts = {}) =>
+    axiosInstance.get(path, { params, responseType: 'blob', ...opts }),
 };
 
 /** Triggers a browser download for exported reports. */
@@ -94,4 +87,6 @@ export async function downloadReport({ type, format = 'excel', ...filters }) {
   URL.revokeObjectURL(url);
 }
 
+export { axiosInstance as axios };
 export default api;
+
