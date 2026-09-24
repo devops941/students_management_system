@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Moon, Sun, LogOut, UserCircle, Bell, ChevronRight } from 'lucide-react';
+import { Menu, Moon, Sun, LogOut, UserCircle, Bell, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sidebar } from './Sidebar';
-import { initials } from '@/lib/utils';
+import { initials, cn } from '@/lib/utils';
 import { HOME_BY_ROLE } from '@/lib/navigation';
 
 function Breadcrumb() {
@@ -32,10 +32,21 @@ function Breadcrumb() {
 
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem('sams.sidebar.collapsed') === 'true';
+  });
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const home = HOME_BY_ROLE[user?.role] || '/';
+
+  const toggleCollapse = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('sams.sidebar.collapsed', String(next));
+      return next;
+    });
+  };
 
   const toggleTheme = () => {
     const root = document.documentElement;
@@ -51,8 +62,13 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-background lg:block">
-        <Sidebar />
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-30 hidden border-r bg-background transition-all duration-300 lg:block',
+          collapsed ? 'w-16' : 'w-64',
+        )}
+      >
+        <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
       </aside>
 
       {/* Mobile sidebar */}
@@ -62,10 +78,19 @@ export default function AppLayout() {
         </SheetContent>
       </Sheet>
 
-      <div className="lg:pl-64">
+      <div className={cn('transition-all duration-300', collapsed ? 'lg:pl-16' : 'lg:pl-64')}>
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
             <Menu className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden lg:flex"
+            onClick={toggleCollapse}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
           </Button>
           <Breadcrumb />
           <div className="ml-auto flex items-center gap-1.5">
@@ -110,9 +135,6 @@ export default function AppLayout() {
         <main className="mx-auto max-w-7xl p-4 sm:p-6">
           <Outlet />
         </main>
-        <footer className="no-print border-t py-4 text-center text-xs text-muted-foreground">
-          Student Attendance Management System &middot; Final Year Project
-        </footer>
       </div>
     </div>
   );

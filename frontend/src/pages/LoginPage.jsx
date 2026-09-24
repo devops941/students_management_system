@@ -92,9 +92,7 @@ export default function LoginPage() {
             <li>&bull; Defaulter lists and exportable reports</li>
           </ul>
         </div>
-        <p className="text-xs text-primary-foreground/70">
-          Final Year Project &middot; React + Express + Prisma + MongoDB
-        </p>
+
       </div>
 
       {/* Form panel */}
