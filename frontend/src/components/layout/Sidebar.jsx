@@ -65,7 +65,7 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
     <TooltipProvider>
       <div className="flex h-full flex-col bg-background">
         {/* Header */}
-        <div className={cn('flex h-13 items-center border-b px-3.5', collapsed ? 'justify-center px-0' : 'justify-between')}>
+        <div className={cn('flex h-14 items-center border-b px-3.5', collapsed ? 'justify-center px-0' : 'justify-between')}>
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
