@@ -15,15 +15,15 @@ function NavItem({ item, collapsed, onNavigate }) {
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
-          collapsed && 'justify-center px-2 py-2.5',
+          'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
+          collapsed && 'mx-auto h-9 w-9 justify-center p-0 rounded-lg',
           isActive
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+            : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground',
         )
       }
     >
-      <Icon className="h-4 w-4 shrink-0" />
+      <Icon className={cn('shrink-0 transition-transform', collapsed ? 'h-5 w-5' : 'h-4 w-4')} strokeWidth={2.2} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </NavLink>
   );
@@ -32,7 +32,7 @@ function NavItem({ item, collapsed, onNavigate }) {
     return (
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipContent side="right" className="font-medium">
+        <TooltipContent side="right" className="font-semibold text-xs shadow-lg">
           {item.label}
         </TooltipContent>
       </Tooltip>
@@ -95,9 +95,9 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
         </div>
 
         {/* Nav items with hidden scrollbar */}
-        <nav className="flex-1 space-y-2.5 overflow-y-auto p-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <nav className={cn('flex-1 space-y-2.5 overflow-y-auto p-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]', collapsed && 'space-y-1.5 px-1')}>
           {sections.map((section) => (
-            <div key={section.title} className="space-y-0.5">
+            <div key={section.title} className={cn('space-y-0.5', collapsed && 'space-y-1')}>
               {!collapsed && (
                 <p className="px-2.5 pb-0.5 pt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">
                   {section.title}
