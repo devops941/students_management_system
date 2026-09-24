@@ -55,39 +55,51 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
     <TooltipProvider>
       <div className="flex h-full flex-col">
         {/* Header */}
-        <div className={cn('flex h-16 items-center justify-between border-b px-4', collapsed && 'justify-center px-2')}>
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Icons.GraduationCap className="h-5 w-5" />
-            </div>
-            {!collapsed && (
-              <div className="leading-tight">
-                <p className="text-sm font-bold">SAMS</p>
-                <p className="text-[11px] text-muted-foreground">Attendance System</p>
+        <div className={cn('flex h-14 items-center border-b px-3.5', collapsed ? 'justify-center' : 'justify-between')}>
+          {collapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform hover:scale-105"
+                >
+                  <Icons.GraduationCap className="h-5 w-5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand sidebar</TooltipContent>
+            </Tooltip>
+          ) : (
+            <>
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Icons.GraduationCap className="h-4.5 w-4.5" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-xs font-bold tracking-tight">SAMS</p>
+                  <p className="text-[10px] text-muted-foreground">Attendance System</p>
+                </div>
               </div>
-            )}
-          </div>
-          {onToggleCollapse && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className={cn(
-                'hidden h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground lg:flex',
-                collapsed && 'mt-1',
+              {onToggleCollapse && (
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  title="Collapse sidebar"
+                >
+                  <Icons.PanelLeftClose className="h-4 w-4" />
+                </button>
               )}
-              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {collapsed ? <Icons.PanelLeftOpen className="h-4 w-4" /> : <Icons.PanelLeftClose className="h-4 w-4" />}
-            </button>
+            </>
           )}
         </div>
 
         {/* Nav items with hidden scrollbar */}
-        <nav className="flex-1 space-y-4 overflow-y-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <nav className="flex-1 space-y-2.5 overflow-y-auto p-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {sections.map((section) => (
-            <div key={section.title} className="space-y-1">
+            <div key={section.title} className="space-y-0.5">
               {!collapsed && (
-                <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                <p className="px-2.5 pb-0.5 pt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">
                   {section.title}
                 </p>
               )}
@@ -99,7 +111,7 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
         </nav>
 
         {/* Footer */}
-        <div className={cn('border-t p-3', collapsed && 'flex justify-center px-1')}>
+        <div className={cn('border-t p-2.5', collapsed && 'flex justify-center')}>
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -112,7 +124,7 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
               </TooltipContent>
             </Tooltip>
           ) : (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="px-1 text-[11px] text-muted-foreground">
               Signed in as <span className="font-medium text-foreground">{role}</span>
             </p>
           )}

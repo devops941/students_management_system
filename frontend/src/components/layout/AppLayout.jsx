@@ -83,15 +83,6 @@ export default function AppLayout() {
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden lg:flex"
-            onClick={toggleCollapse}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-          </Button>
           <Breadcrumb />
           <div className="ml-auto flex items-center gap-1.5">
             <Button variant="ghost" size="icon" onClick={toggleTheme} title="Toggle theme">
