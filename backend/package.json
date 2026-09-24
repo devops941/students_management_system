@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "Student Attendance Management System - Express + Prisma + MongoDB backend",
   "type": "module",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "dev": "node --watch server.js",
+    "start": "node server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "seed": "node src/seed/seed.js",
+    "seed": "node seed/seed.js",
     "test": "node tests/api.test.js"
   },
   "dependencies": {
