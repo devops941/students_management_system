@@ -59,10 +59,14 @@ export default function StudentLeavesPage() {
     }
   };
 
-  const cancel = async (row) => {
-    if (!window.confirm('Cancel this pending request?')) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmCancel = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.delete(`/leaves/${row.id}`);
+      await api.delete(`/leaves/${target.id}`);
       toast.success('Request cancelled');
       load();
     } catch (err) {
@@ -141,7 +145,7 @@ export default function StudentLeavesPage() {
                     <TableCell>
                       {l.status === 'PENDING' && (
                         <Button
-                          variant="ghost" size="icon" onClick={() => cancel(l)}
+                          variant="ghost" size="icon" onClick={() => setDeleteTarget(l)}
                           className="text-red-600 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -155,6 +159,21 @@ export default function StudentLeavesPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Leave Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel this pending leave request?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>No, keep request</Button>
+            <Button variant="destructive" onClick={confirmCancel}>Yes, cancel request</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

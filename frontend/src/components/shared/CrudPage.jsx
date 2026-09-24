@@ -143,10 +143,14 @@ export function CrudPage({
     }
   };
 
-  const remove = async (row) => {
-    if (!window.confirm(`Delete this ${title.toLowerCase()}? This cannot be undone.`)) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.delete(`${endpoint}/${row.id}`);
+      await api.delete(`${endpoint}/${target.id}`);
       toast.success(`${title} deleted`);
       await load();
     } catch (err) {
@@ -238,7 +242,7 @@ export function CrudPage({
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => remove(row)}
+                            onClick={() => setDeleteTarget(row)}
                             title="Delete"
                             className="text-red-600 hover:text-red-600"
                           >
@@ -324,6 +328,25 @@ export function CrudPage({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this {title.toLowerCase()}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmRemove}>
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

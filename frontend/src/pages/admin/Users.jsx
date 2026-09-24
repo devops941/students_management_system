@@ -80,10 +80,14 @@ export default function UsersPage() {
     }
   };
 
-  const remove = async (row) => {
-    if (!window.confirm(`Delete account for ${row.name}?`)) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.delete(`/users/${row.id}`);
+      await api.delete(`/users/${target.id}`);
       toast.success('User deleted');
       load();
     } catch (err) {
@@ -155,7 +159,7 @@ export default function UsersPage() {
                             <Power className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost" size="icon" onClick={() => remove(u)}
+                            variant="ghost" size="icon" onClick={() => setDeleteTarget(u)}
                             className="text-red-600 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -171,6 +175,21 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the user account for {deleteTarget?.name}?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmRemove}>Delete user</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

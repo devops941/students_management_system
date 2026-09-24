@@ -11,6 +11,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { statusVariant, formatDate } from '@/lib/utils';
@@ -49,10 +52,14 @@ export default function AttendanceRecordsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters)]);
 
-  const remove = async (row) => {
-    if (!window.confirm('Delete this attendance record? Percentages will be recalculated.')) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.delete(`/attendance/${row.id}`);
+      await api.delete(`/attendance/${target.id}`);
       toast.success('Record deleted');
       load();
     } catch (err) {
@@ -137,7 +144,7 @@ export default function AttendanceRecordsPage() {
                       <TableCell className="text-xs">{r.faculty?.user?.name || '-'}</TableCell>
                       <TableCell>
                         <Button
-                          variant="ghost" size="icon" onClick={() => remove(r)}
+                          variant="ghost" size="icon" onClick={() => setDeleteTarget(r)}
                           className="text-red-600 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -152,6 +159,21 @@ export default function AttendanceRecordsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Delete this attendance record? Student percentages will be automatically recalculated.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmRemove}>Delete record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

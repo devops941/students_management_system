@@ -84,10 +84,14 @@ export default function TimetablePage() {
     }
   };
 
-  const removeSlot = async (slot) => {
-    if (!window.confirm('Remove this period from the timetable?')) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.delete(`/timetable/${slot.id}`);
+      await api.delete(`/timetable/${target.id}`);
       toast.success('Period removed');
       loadSlots(classId);
     } catch (err) {
@@ -167,7 +171,7 @@ export default function TimetablePage() {
                               </p>
                               <button
                                 type="button"
-                                onClick={() => removeSlot(slot)}
+                                onClick={() => setDeleteTarget(slot)}
                                 className="absolute right-1 top-1 hidden rounded p-1 text-red-600 hover:bg-red-50 group-hover:block"
                                 title="Remove period"
                               >
@@ -191,6 +195,21 @@ export default function TimetablePage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Remove</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this period from the timetable?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmRemove}>Remove period</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

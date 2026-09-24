@@ -98,10 +98,14 @@ export default function FacultyPage() {
     }
   };
 
-  const remove = async (row) => {
-    if (!window.confirm(`Delete ${row.user?.name}? This removes their login and assignments.`)) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.delete(`/faculty-list/${row.id}`);
+      await api.delete(`/faculty-list/${target.id}`);
       toast.success('Faculty deleted');
       load();
     } catch (err) {
@@ -175,7 +179,7 @@ export default function FacultyPage() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(f)}><Pencil className="h-4 w-4" /></Button>
                           <Button
-                            variant="ghost" size="icon" onClick={() => remove(f)}
+                            variant="ghost" size="icon" onClick={() => setDeleteTarget(f)}
                             className="text-red-600 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -191,6 +195,21 @@ export default function FacultyPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Delete {deleteTarget?.user?.name}? This removes their login and assignments.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmRemove}>Delete faculty</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
