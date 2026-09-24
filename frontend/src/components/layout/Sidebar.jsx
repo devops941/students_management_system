@@ -19,18 +19,25 @@ function NavItem({ item, collapsed, onNavigate }) {
           collapsed && 'mx-auto h-10 w-10 justify-center p-0 rounded-lg',
           isActive
             ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white',
+            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white',
         )
       }
     >
-      <Icon
-        className={cn(
-          'shrink-0 transition-colors',
-          collapsed ? 'h-5 w-5' : 'h-4 w-4',
-        )}
-        strokeWidth={2}
-      />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {({ isActive }) => (
+        <>
+          <Icon
+            className={cn(
+              'shrink-0 transition-colors',
+              collapsed ? 'h-5 w-5' : 'h-4.5 w-4.5',
+              isActive
+                ? 'text-primary-foreground'
+                : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white',
+            )}
+            strokeWidth={2.2}
+          />
+          {!collapsed && <span className="truncate">{item.label}</span>}
+        </>
+      )}
     </NavLink>
   );
 
