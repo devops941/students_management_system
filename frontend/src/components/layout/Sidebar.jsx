@@ -17,10 +17,10 @@ function NavItem({ item, collapsed, onNavigate }) {
       to={item.to}
       onClick={onNavigate}
       className={cn(
-        'group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all',
-        collapsed && 'mx-auto h-10 w-10 justify-center p-0 rounded-lg',
+        'group flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all',
+        collapsed && 'mx-auto h-9 w-9 justify-center p-0 rounded-lg',
         isActive
-          ? 'bg-blue-600 text-white shadow-md font-semibold dark:bg-blue-600 dark:text-white'
+          ? 'bg-blue-600 text-white shadow-sm font-semibold dark:bg-blue-600 dark:text-white'
           : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white',
       )}
     >
@@ -32,7 +32,7 @@ function NavItem({ item, collapsed, onNavigate }) {
             ? 'text-white'
             : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white',
         )}
-        strokeWidth={2.2}
+        strokeWidth={2.1}
       />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
@@ -65,14 +65,14 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
     <TooltipProvider>
       <div className="flex h-full flex-col bg-background">
         {/* Header */}
-        <div className={cn('flex h-14 items-center border-b px-3.5', collapsed ? 'justify-center px-0' : 'justify-between')}>
+        <div className={cn('flex h-13 items-center border-b px-3.5', collapsed ? 'justify-center px-0' : 'justify-between')}>
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
                   type="button"
                   onClick={onToggleCollapse}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-105 focus:outline-none"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-105 focus:outline-none"
                   title="Expand sidebar"
                 >
                   <Icons.GraduationCap className="h-5 w-5" />
@@ -105,16 +105,16 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
           )}
         </div>
 
-        {/* Nav items with hidden scrollbar */}
-        <nav className={cn('flex-1 space-y-3 overflow-y-auto p-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]', collapsed && 'space-y-2 px-1')}>
+        {/* Nav items - optimized spacing & text size */}
+        <nav className={cn('flex-1 overflow-y-auto px-2 py-1.5 space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]', collapsed && 'px-1 space-y-1')}>
           {sections.map((section, idx) => (
-            <div key={section.title} className="space-y-1">
+            <div key={section.title} className="space-y-0.5">
               {!collapsed ? (
-                <p className="px-2.5 pb-0.5 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <p className="px-2.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   {section.title}
                 </p>
               ) : idx > 0 ? (
-                <div className="my-1.5 border-t border-border/60 mx-2" />
+                <div className="my-1 border-t border-border/60 mx-1.5" />
               ) : null}
               {section.items.map((item) => (
                 <NavItem key={item.to + item.label} item={item} collapsed={collapsed} onNavigate={onNavigate} />
@@ -122,26 +122,6 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate }) {
             </div>
           ))}
         </nav>
-
-        {/* Footer */}
-        <div className={cn('border-t p-2.5', collapsed && 'flex justify-center')}>
-          {collapsed ? (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  {role?.[0]}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="font-medium text-xs">
-                Signed in as <span className="font-bold">{role}</span>
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <p className="px-1 text-[11px] text-muted-foreground">
-              Signed in as <span className="font-semibold text-foreground">{role}</span>
-            </p>
-          )}
-        </div>
       </div>
     </TooltipProvider>
   );
