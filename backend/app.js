@@ -17,17 +17,33 @@ import { notFound, errorHandler } from './middleware/error.js';
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({ origin: env.corsOrigin, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        env.corsOrigin.includes('*') ||
+        env.corsOrigin.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: '5mb' }));
 app.use(compression());
 if (env.nodeEnv !== 'test') app.use(morgan('dev'));
 
 // Throttle login attempts to slow credential stuffing.
 app.use(
-  '/api/auth/login',
+  ['/api/auth/login', '/auth/login'],
   rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false }),
 );
-app.use('/api', rateLimit({ windowMs: 60_000, max: 600, standardHeaders: true, legacyHeaders: false }));
+app.use(['/api', '/'], rateLimit({ windowMs: 60_000, max: 600, standardHeaders: true, legacyHeaders: false }));
 
 app.get(['/', '/api'], (_req, res) =>
   res.json({
@@ -44,12 +60,12 @@ app.get(['/health', '/api/health'], (_req, res) =>
   res.json({ success: true, data: { status: 'ok', service: 'sams-api', time: new Date().toISOString() } }),
 );
 
-app.use('/api/auth', authRoutes);
-app.use('/api', academicRoutes);
-app.use('/api', peopleRoutes);
-app.use('/api', attendanceRoutes);
-app.use('/api', leaveRoutes);
-app.use('/api', adminRoutes);
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api', '/'], academicRoutes);
+app.use(['/api', '/'], peopleRoutes);
+app.use(['/api', '/'], attendanceRoutes);
+app.use(['/api', '/'], leaveRoutes);
+app.use(['/api', '/'], adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
