@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -8,37 +8,34 @@ import {
 } from '@/components/ui/tooltip';
 
 function NavItem({ item, collapsed, onNavigate }) {
+  const location = useLocation();
   const Icon = Icons[item.icon] || Icons.Circle;
+  const isActive = location.pathname === item.to || (item.to !== '/' && item.to.length > 1 && location.pathname.startsWith(item.to + '/'));
+
   const content = (
-    <NavLink
+    <Link
       to={item.to}
       onClick={onNavigate}
-      className={({ isActive }) =>
-        cn(
-          'group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all',
-          collapsed && 'mx-auto h-10 w-10 justify-center p-0 rounded-lg',
-          isActive
-            ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white',
-        )
-      }
-    >
-      {({ isActive }) => (
-        <>
-          <Icon
-            className={cn(
-              'shrink-0 transition-colors',
-              collapsed ? 'h-5 w-5' : 'h-4.5 w-4.5',
-              isActive
-                ? 'text-primary-foreground'
-                : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white',
-            )}
-            strokeWidth={2.2}
-          />
-          {!collapsed && <span className="truncate">{item.label}</span>}
-        </>
+      className={cn(
+        'group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all',
+        collapsed && 'mx-auto h-10 w-10 justify-center p-0 rounded-lg',
+        isActive
+          ? 'bg-blue-600 text-white shadow-md font-semibold dark:bg-blue-600 dark:text-white'
+          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white',
       )}
-    </NavLink>
+    >
+      <Icon
+        className={cn(
+          'shrink-0 transition-colors',
+          collapsed ? 'h-5 w-5' : 'h-4.5 w-4.5',
+          isActive
+            ? 'text-white'
+            : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white',
+        )}
+        strokeWidth={2.2}
+      />
+      {!collapsed && <span className="truncate">{item.label}</span>}
+    </Link>
   );
 
   if (collapsed) {
