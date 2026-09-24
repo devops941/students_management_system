@@ -1,0 +1,305 @@
+// Student Attendance Management System - Prisma schema (MongoDB)
+// Collections: users, roles(enums), students, faculty, parents, departments,
+// courses, classes, subjects, timetable, attendance, leave_requests, alerts,
+// settings, audit_logs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  FACULTY
+  STUDENT
+  PARENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  ON_DUTY
+}
+
+enum LeaveType {
+  LEAVE
+  ON_DUTY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AlertType {
+  SHORTAGE
+  LEAVE_STATUS
+  INFO
+}
+
+enum AlertStatus {
+  OPEN
+  RESOLVED
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id               String      @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  email            String      @unique
+  password         String
+  role             Role        @default(STUDENT)
+  phone            String?
+  active           Boolean     @default(true)
+  lastLoginAt      DateTime?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  student     Student?
+  faculty     Faculty?
+  parent      Parent?
+  auditLogs   AuditLog[]
+  approvedLeaves LeaveRequest[] @relation("LeaveApprover")
+  markedAttendance Attendance[] @relation("AttendanceMarker")
+
+  @@map("users")
+}
+
+model Department {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  code      String   @unique
+  hodName   String?
+  createdAt DateTime @default(now())
+
+  courses  Course[]
+  faculty  Faculty[]
+  students Student[]
+
+  @@map("departments")
+}
+
+model Course {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  code          String   @unique
+  durationYears Int      @default(4)
+  departmentId  String   @db.ObjectId
+  createdAt     DateTime @default(now())
+
+  department Department  @relation(fields: [departmentId], references: [id])
+  classes    ClassRoom[]
+  subjects   Subject[]
+
+  @@map("courses")
+}
+
+model ClassRoom {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  section      String
+  semester     Int
+  academicYear String
+  courseId     String   @db.ObjectId
+  createdAt    DateTime @default(now())
+
+  course     Course        @relation(fields: [courseId], references: [id])
+  students   Student[]
+  timetable  Timetable[]
+  attendance Attendance[]
+
+  @@unique([name, section, academicYear])
+  @@map("classes")
+}
+
+model Subject {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  code      String   @unique
+  semester  Int
+  credits   Int      @default(3)
+  courseId  String   @db.ObjectId
+  facultyId String?  @db.ObjectId
+  createdAt DateTime @default(now())
+
+  course     Course        @relation(fields: [courseId], references: [id])
+  faculty    Faculty?      @relation(fields: [facultyId], references: [id])
+  timetable  Timetable[]
+  attendance Attendance[]
+
+  @@map("subjects")
+}
+
+model Faculty {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  employeeCode String   @unique
+  designation  String
+  joiningDate  DateTime @default(now())
+  userId       String   @unique @db.ObjectId
+  departmentId String   @db.ObjectId
+  createdAt    DateTime @default(now())
+
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department   @relation(fields: [departmentId], references: [id])
+  subjects   Subject[]
+  timetable  Timetable[]
+  attendance Attendance[]
+
+  @@map("faculty")
+}
+
+model Student {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  rollNumber    String   @unique
+  admissionYear Int
+  guardianName  String?
+  guardianPhone String?
+  userId        String   @unique @db.ObjectId
+  classId       String   @db.ObjectId
+  departmentId  String   @db.ObjectId
+  parentId      String?  @db.ObjectId
+  createdAt     DateTime @default(now())
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class        ClassRoom      @relation(fields: [classId], references: [id])
+  department   Department     @relation(fields: [departmentId], references: [id])
+  parent       Parent?        @relation(fields: [parentId], references: [id])
+  attendance   Attendance[]
+  leaveRequests LeaveRequest[]
+  alerts       Alert[]
+
+  @@map("students")
+}
+
+model Parent {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  occupation String?
+  relation   String   @default("Guardian")
+  userId     String   @unique @db.ObjectId
+  createdAt  DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students Student[]
+
+  @@map("parents")
+}
+
+model Timetable {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  dayOfWeek Int
+  period    Int
+  startTime String
+  endTime   String
+  room      String?
+  classId   String   @db.ObjectId
+  subjectId String   @db.ObjectId
+  facultyId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  class   ClassRoom @relation(fields: [classId], references: [id])
+  subject Subject   @relation(fields: [subjectId], references: [id])
+  faculty Faculty   @relation(fields: [facultyId], references: [id])
+
+  @@unique([classId, dayOfWeek, period])
+  @@map("timetable")
+}
+
+model Attendance {
+  id         String           @id @default(auto()) @map("_id") @db.ObjectId
+  date       DateTime
+  period     Int?
+  status     AttendanceStatus
+  remarks    String?
+  studentId  String           @db.ObjectId
+  classId    String           @db.ObjectId
+  subjectId  String           @db.ObjectId
+  facultyId  String           @db.ObjectId
+  markedById String           @db.ObjectId
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  student  Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class    ClassRoom @relation(fields: [classId], references: [id])
+  subject  Subject   @relation(fields: [subjectId], references: [id])
+  faculty  Faculty   @relation(fields: [facultyId], references: [id])
+  markedBy User      @relation("AttendanceMarker", fields: [markedById], references: [id])
+
+  @@unique([studentId, subjectId, date, period])
+  @@map("attendance")
+}
+
+model LeaveRequest {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  fromDate        DateTime
+  toDate          DateTime
+  reason          String
+  type            LeaveType   @default(LEAVE)
+  status          LeaveStatus @default(PENDING)
+  approverRemarks String?
+  appliedAt       DateTime    @default(now())
+  approvedAt      DateTime?
+  studentId       String      @db.ObjectId
+  approvedById    String?     @db.ObjectId
+
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  approvedBy User?   @relation("LeaveApprover", fields: [approvedById], references: [id])
+
+  @@map("leave_requests")
+}
+
+model Alert {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  type       AlertType   @default(SHORTAGE)
+  severity   Severity    @default(MEDIUM)
+  status     AlertStatus @default(OPEN)
+  message    String
+  percentage Float
+  threshold  Float
+  isRead     Boolean     @default(false)
+  notifiedAt DateTime?
+  resolvedAt DateTime?
+  studentId  String      @db.ObjectId
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("alerts")
+}
+
+model Setting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  action    String
+  entity    String
+  entityId  String?
+  meta      String?
+  ip        String?
+  userId    String?  @db.ObjectId
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
