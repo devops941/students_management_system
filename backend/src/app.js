@@ -29,7 +29,7 @@ app.use(
 );
 app.use('/api', rateLimit({ windowMs: 60_000, max: 600, standardHeaders: true, legacyHeaders: false }));
 
-app.get('/', (_req, res) =>
+app.get(['/', '/api'], (_req, res) =>
   res.json({
     success: true,
     message: 'SAMS API Backend is running',
@@ -40,7 +40,7 @@ app.get('/', (_req, res) =>
   }),
 );
 
-app.get('/health', (_req, res) =>
+app.get(['/health', '/api/health'], (_req, res) =>
   res.json({ success: true, data: { status: 'ok', service: 'sams-api', time: new Date().toISOString() } }),
 );
 
